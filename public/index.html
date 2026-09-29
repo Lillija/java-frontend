@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Blog</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-brand">My Blog</div>
+        <ul class="nav-links">
+            <li><a href="#" class="active" onclick="showPage('home')">Home</a></li>
+            <li><a href="#" onclick="showPage('profile')">Profile</a></li>
+            <li><a href="#" onclick="showPage('about')">About</a></li>
+            <li><a href="#" onclick="showPage('contact')">Contact</a></li>
+        </ul>
+        <div class="nav-auth">
+            <span id="nav-user" class="nav-user hidden"></span>
+            <button id="nav-login-btn" class="nav-btn" onclick="showPage('login')">Login</button>
+            <button id="nav-logout-btn" class="nav-btn hidden" onclick="handleLogout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- HOME PAGE -->
+        <div id="page-home" class="page">
+            <div class="hero">
+                <h1>Welcome to My Blog</h1>
+                <p>Share your thoughts with the world</p>
+            </div>
+
+            <!-- Create Post -->
+            <div id="create-post-section" class="create-post-section hidden">
+                <h3>Write a New Post</h3>
+                <input type="text" id="post-title" placeholder="Post title...">
+                <textarea id="post-body" placeholder="What's on your mind?" rows="4"></textarea>
+                <button onclick="handleCreatePost()" class="btn-primary">Publish</button>
+            </div>
+
+            <!-- Loading -->
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Loading posts...</p>
+            </div>
+
+            <!-- Error -->
+            <div id="error" class="error hidden"></div>
+
+            <!-- Posts -->
+            <div id="posts-container" class="posts-container">
+                <p class="placeholder">Click "Load Posts" to see articles</p>
+            </div>
+
+            <div class="load-more">
+                <button onclick="loadPosts()" class="btn-secondary">Load Posts</button>
+            </div>
+        </div>
+
+        <!-- PROFILE PAGE -->
+        <div id="page-profile" class="page hidden">
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <span id="profile-initial">?</span>
+                </div>
+                <div class="profile-info">
+                    <h2 id="profile-name">Guest</h2>
+                    <p id="profile-email">Not logged in</p>
+                    <p id="profile-bio" class="profile-bio">This is your profile page. Login to see your details.</p>
+                </div>
+            </div>
+            <div class="profile-stats">
+                <div class="stat">
+                    <span id="stat-posts" class="stat-number">0</span>
+                    <span class="stat-label">Posts</span>
+                </div>
+                <div class="stat">
+                    <span id="stat-comments" class="stat-number">0</span>
+                    <span class="stat-label">Comments</span>
+                </div>
+                <div class="stat">
+                    <span id="stat-likes" class="stat-number">0</span>
+                    <span class="stat-label">Likes</span>
+                </div>
+            </div>
+            <div id="user-posts" class="user-posts">
+                <h3>Your Posts</h3>
+                <div id="user-posts-container"></div>
+            </div>
+        </div>
+
+        <!-- ABOUT PAGE -->
+        <div id="page-about" class="page hidden">
+            <div class="about-content">
+                <h2>About This Blog</h2>
+                <p>This is a simple blog built with vanilla JavaScript. It demonstrates AJAX requests, DOM manipulation, and modern web development practices.</p>
+                <p>Features include user authentication, post creation, commenting, and likes - all without page reloads.</p>
+            </div>
+        </div>
+
+        <!-- CONTACT PAGE -->
+        <div id="page-contact" class="page hidden">
+            <div class="contact-content">
+                <h2>Contact Us</h2>
+                <p>Have questions or feedback? Reach out!</p>
+                <div class="contact-info">
+                    <p><strong>Email:</strong> hello@myblog.com</p>
+                    <p><strong>Twitter:</strong> @myblog</p>
+                    <p><strong>GitHub:</strong> github.com/myblog</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOGIN PAGE -->
+        <div id="page-login" class="page hidden">
+            <div class="login-container">
+                <h2>Login to Your Account</h2>
+                <input type="email" id="login-email" placeholder="Email address" value="admin@example.com">
+                <input type="password" id="login-password" placeholder="Password" value="password">
+                <button onclick="handleLogin()" class="btn-primary">Login</button>
+                <p class="login-hint">Demo: admin@example.com / password</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

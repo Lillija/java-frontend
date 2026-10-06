@@ -3,46 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Blog</title>
+    <title>My Blog · Vanilla JS + Laravel REST API</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Requirement 4: progress bar shown while any AJAX request is running -->
+    <div id="top-progress" class="top-progress hidden"></div>
+
     <!-- Navigation Bar -->
     <nav class="navbar">
-        <div class="nav-brand">My Blog</div>
+        <div class="nav-brand">📝 My Blog</div>
         <ul class="nav-links">
-            <li><a href="#" class="active" onclick="showPage('home')">Home</a></li>
-            <li><a href="#" onclick="showPage('profile')">Profile</a></li>
-            <li><a href="#" onclick="showPage('about')">About</a></li>
-            <li><a href="#" onclick="showPage('contact')">Contact</a></li>
+            <li><a href="#" data-page="home" class="active">Home</a></li>
+            <li><a href="#" data-page="apilab">Free API Lab</a></li>
+            <li><a href="#" data-page="profile">Profile</a></li>
+            <li><a href="#" data-page="about">About</a></li>
+            <li><a href="#" data-page="contact">Contact</a></li>
         </ul>
         <div class="nav-auth">
             <span id="nav-user" class="nav-user hidden"></span>
-            <button id="nav-login-btn" class="nav-btn" onclick="showPage('login')">Login</button>
-            <button id="nav-logout-btn" class="nav-btn hidden" onclick="handleLogout()">Logout</button>
+            <button id="nav-login-btn" class="nav-btn" data-page="login">Login</button>
+            <button id="nav-logout-btn" class="nav-btn hidden">Logout</button>
         </div>
     </nav>
 
     <div class="container">
+        <!-- AJAX TOOLBAR: switch between the two required AJAX techniques -->
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <span class="toolbar-label">AJAX method:</span>
+                <button id="btn-xhr" class="method-btn active" title="Method 1: XMLHttpRequest">XMLHttpRequest</button>
+                <button id="btn-fetch" class="method-btn" title="Method 2: Fetch API + async/await">Fetch API · async/await</button>
+            </div>
+            <div class="toolbar-group">
+                <span class="chip chip-api" title="Backend REST API (Laravel + Sanctum)">🌐 http://localhost:8000/api</span>
+                <span id="status-chip" class="chip chip-status">Ready</span>
+            </div>
+        </div>
+
         <!-- HOME PAGE -->
         <div id="page-home" class="page">
             <div class="hero">
                 <h1>Welcome to My Blog</h1>
-                <p>Share your thoughts with the world</p>
+                <p>All data is loaded in the background with AJAX — no page reload</p>
             </div>
 
             <!-- Create Post -->
             <div id="create-post-section" class="create-post-section hidden">
                 <h3>Write a New Post</h3>
-                <input type="text" id="post-title" placeholder="Post title...">
+                <input type="text" id="post-title" placeholder="Post title..." maxlength="255">
                 <textarea id="post-body" placeholder="What's on your mind?" rows="4"></textarea>
-                <button onclick="handleCreatePost()" class="btn-primary">Publish</button>
+                <button id="btn-create-post" class="btn-primary">Publish</button>
             </div>
 
-            <!-- Loading -->
+            <!-- Loading (requirement 4: spinner) -->
             <div id="loading" class="loading hidden">
                 <div class="spinner"></div>
-                <p>Loading posts...</p>
+                <p id="loading-text">Loading posts...</p>
             </div>
 
             <!-- Error -->
@@ -54,7 +71,109 @@
             </div>
 
             <div class="load-more">
-                <button onclick="loadPosts()" class="btn-secondary">Load Posts</button>
+                <button id="btn-load-posts" class="btn-secondary">Load Posts</button>
+            </div>
+        </div>
+
+        <!-- FREE API LAB PAGE (requirement 1: free REST API + query parameters) -->
+        <div id="page-apilab" class="page hidden">
+            <div class="section-intro">
+                <h2>Free REST API Lab</h2>
+                <p>
+                    Two free public REST APIs are called with <strong>query parameters</strong>
+                    (<code>?key=value&amp;key2=value2</code>) using the same AJAX method you pick in the toolbar
+                    above. Try switching between <em>XMLHttpRequest</em> and <em>Fetch API</em> and press the
+                    buttons again — the result is identical, only the transport changes.
+                </p>
+            </div>
+
+            <div class="lab-grid">
+                <!-- WEATHER -->
+                <div class="lab-card">
+                    <h3>🌤️ Weather <span class="lab-provider">Open-Meteo</span></h3>
+                    <div class="field-row">
+                        <input type="text" id="weather-city" placeholder="City (e.g. Rīga)" value="Rīga">
+                        <button id="btn-weather" class="btn-primary">Get weather</button>
+                    </div>
+
+                    <div id="weather-loading" class="inline-loading hidden">
+                        <div class="spinner spinner-sm"></div>
+                        <span>Fetching weather…</span>
+                    </div>
+                    <div id="weather-error" class="error error-sm hidden"></div>
+                    <div id="weather-result" class="lab-result">
+                        <p class="placeholder">Enter a city and press <strong>Get weather</strong></p>
+                    </div>
+
+                    <div class="request-trace">
+                        <span class="trace-label">Requests:</span>
+                        <code id="weather-trace-geo">1) GET …/geocoding-api.open-meteo.com/v1/search?name=…&amp;count=1</code>
+                        <code id="weather-trace-forecast">2) GET …/api.open-meteo.com/v1/forecast?latitude=…&amp;longitude=…&amp;current=…</code>
+                    </div>
+                </div>
+
+                <!-- JOKES -->
+                <div class="lab-card">
+                    <h3>😄 Jokes <span class="lab-provider">icanhazdadjoke</span></h3>
+                    <div class="field-row">
+                        <input type="text" id="joke-term" placeholder="Search keyword (query param: term)" value="food">
+                        <select id="joke-limit">
+                            <option value="1">limit=1</option>
+                            <option value="3" selected>limit=3</option>
+                            <option value="5">limit=5</option>
+                        </select>
+                        <button id="btn-joke-search" class="btn-primary">Search jokes</button>
+                    </div>
+                    <div class="field-row field-row-alt">
+                        <button id="btn-joke-random" class="btn-secondary">Random joke</button>
+                        <span class="hint">GET /jokes/random</span>
+                    </div>
+
+                    <div id="joke-loading" class="inline-loading hidden">
+                        <div class="spinner spinner-sm"></div>
+                        <span>Fetching jokes…</span>
+                    </div>
+                    <div id="joke-error" class="error error-sm hidden"></div>
+                    <div id="joke-result" class="lab-result">
+                        <p class="placeholder">Press <strong>Search jokes</strong> or <strong>Random joke</strong></p>
+                    </div>
+
+                    <div class="request-trace">
+                        <span class="trace-label">Request:</span>
+                        <code id="joke-trace">GET …/icanhazdadjoke.com/search?term=food&amp;limit=1</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lab-card lab-card-wide">
+                <h3>📖 Query parameters used here</h3>
+                <table class="params-table">
+                    <thead>
+                        <tr><th>API</th><th>Endpoint</th><th>Query parameters</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Open-Meteo Geocoding</td>
+                            <td><code>geocoding-api.open-meteo.com/v1/search</code></td>
+                            <td><code>name</code>, <code>count</code>, <code>language</code>, <code>format</code></td>
+                        </tr>
+                        <tr>
+                            <td>Open-Meteo Forecast</td>
+                            <td><code>api.open-meteo.com/v1/forecast</code></td>
+                            <td><code>latitude</code>, <code>longitude</code>, <code>current</code>, <code>daily</code>, <code>timezone</code>, <code>forecast_days</code></td>
+                        </tr>
+                        <tr>
+                            <td>icanhazdadjoke</td>
+                            <td><code>icanhazdadjoke.com/search</code></td>
+                            <td><code>term</code>, <code>limit</code>, <code>page</code></td>
+                        </tr>
+                        <tr>
+                            <td>Laravel blog API</td>
+                            <td><code>localhost:8000/api/posts</code></td>
+                            <td>REST resources: <code>/posts</code>, <code>/posts/{id}</code>, <code>/posts/{id}/comments</code></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -84,7 +203,7 @@
                     <span class="stat-label">Likes</span>
                 </div>
             </div>
-            <div id="user-posts" class="user-posts">
+            <div class="user-posts">
                 <h3>Your Posts</h3>
                 <div id="user-posts-container"></div>
             </div>
@@ -94,8 +213,35 @@
         <div id="page-about" class="page hidden">
             <div class="about-content">
                 <h2>About This Blog</h2>
-                <p>This is a simple blog built with vanilla JavaScript. It demonstrates AJAX requests, DOM manipulation, and modern web development practices.</p>
-                <p>Features include user authentication, post creation, commenting, and likes - all without page reloads.</p>
+                <p>
+                    This is a simple blog built with <strong>vanilla JavaScript</strong>. It talks to the
+                    <strong>Laravel REST API</strong> (<code>https://github.com/zirodev23/laravel-api</code>)
+                    using AJAX, so the page <em>never reloads</em>. All content is rendered with DOM manipulation.
+                </p>
+                <p>
+                    Two interchangeable AJAX techniques are implemented for exactly the same tasks:
+                    <strong>XMLHttpRequest</strong> with Promises and the <strong>Fetch API with async/await</strong>.
+                    Switch between them in the toolbar and repeat any action.
+                </p>
+
+                <h3>SSR, CSR and Hydration</h3>
+                <div class="concept-grid">
+                    <div class="concept">
+                        <h4>SSR — Server-Side Rendering</h4>
+                        <p>The HTML is built on the server and sent complete. Great for the first paint and SEO,
+                           but every interaction needs the server.</p>
+                    </div>
+                    <div class="concept">
+                        <h4>CSR — Client-Side Rendering</h4>
+                        <p>The browser downloads a small shell and builds the DOM with JavaScript (like this page).
+                           Fast interactions, but the first paint waits for JS.</p>
+                    </div>
+                    <div class="concept">
+                        <h4>Hydration</h4>
+                        <p>The step where the framework takes the server-rendered HTML and attaches event listeners
+                           and state to it, making the static markup "come alive".</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -116,13 +262,29 @@
         <div id="page-login" class="page hidden">
             <div class="login-container">
                 <h2>Login to Your Account</h2>
+                <div id="login-error" class="error error-sm hidden"></div>
                 <input type="email" id="login-email" placeholder="Email address" value="admin@example.com">
                 <input type="password" id="login-password" placeholder="Password" value="password">
-                <button onclick="handleLogin()" class="btn-primary">Login</button>
+                <button id="btn-login" class="btn-primary">Login</button>
                 <p class="login-hint">Demo: admin@example.com / password</p>
             </div>
         </div>
     </div>
+
+    <!-- Network log: proof that requests happen without page reload -->
+    <button id="netlog-toggle" class="netlog-toggle" title="Show AJAX request log">📶 Network log <span id="netlog-count">0</span></button>
+    <div id="netlog" class="netlog hidden">
+        <div class="netlog-head">
+            <strong>AJAX requests (no page reload)</strong>
+            <button id="netlog-close">✕</button>
+        </div>
+        <div id="netlog-list" class="netlog-list">
+            <p class="placeholder">No requests yet</p>
+        </div>
+    </div>
+
+    <!-- Toasts -->
+    <div id="toast-container" class="toast-container"></div>
 
     <script src="app.js"></script>
 </body>

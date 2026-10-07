@@ -40,6 +40,16 @@ export default function PostCard({ post, user, onDelete }) {
     setOpen(false)
   }
 
+  async function handleDeleteClick() {
+    setError(null)
+    try {
+      await onDelete(post.id)
+    } catch (err) {
+      // The request failed — show the reason instead of failing silently.
+      setError(err.message)
+    }
+  }
+
   async function handleComment(event) {
     event.preventDefault()
     if (!draft.trim()) return
@@ -58,7 +68,7 @@ export default function PostCard({ post, user, onDelete }) {
       <header className="post-head">
         <h3>{post.title}</h3>
         {canDelete && (
-          <button className="btn btn-ghost" onClick={() => onDelete(post.id)}>
+          <button className="btn btn-ghost" onClick={handleDeleteClick}>
             Delete
           </button>
         )}

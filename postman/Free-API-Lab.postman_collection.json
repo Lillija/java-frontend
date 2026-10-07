@@ -1,0 +1,998 @@
+{
+  "info": {
+    "_postman_id": "3f6a1c20-9f4b-4d1e-8c7a-0b1c2d3e4f50",
+    "name": "Uzdevums 1 · Bezmaksas REST API ar query parametriem",
+    "description": "**WEB frontend laboratorais darbs, uzdevums Nr.1.**\n\nBezmaksas REST API (Open-Meteo laikapstākļi un icanhazdadjoke joki), testēti ar **dažādiem query parametriem**, plus šī projekta own Laravel REST API (`zirodev23/laravel-api`).\n\n**Kā lietot:**\n1. Postman → *Collections → Import* → `postman/Free-API-Lab.postman_collection.json`.\n2. Izpildi visu kolekciju ar *Run* — testi (`pm.test`) pārbauda statusus, atbildes formātus un to, ka katrs parametrs tiešām maina atbildi.\n\nTie paši pieprasījumi darbojas arī no pārlūka: *Free API Lab* lapa `public/index.html`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "postId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1 · Free REST API — Open-Meteo (laikapstākļi)",
+      "description": "Bezmaksas REST API bez atslēgas. Katrs pieprasījums atšķiras ar query parametriem — tāpat kā Postman testēšanā uzdevumā Nr.1.",
+      "item": [
+        {
+          "name": "Geocode: Rīga (name, count, language, format)",
+          "description": "Pirmā pārbaude — noklusētie parametri ar pilsētas nosaukumu `name`.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Content-Type: application/json\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test(\"vismaz viens rezultāts\", function () {",
+                  "    pm.expect(body.results).to.be.an(\"array\").that.is.not.empty;",
+                  "});",
+                  "pm.test(\"rezultātam ir latitude/longitude\", function () {",
+                  "    pm.expect(body.results[0]).to.have.property(\"latitude\");",
+                  "    pm.expect(body.results[0]).to.have.property(\"longitude\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://geocoding-api.open-meteo.com/v1/search?name=Rīga&count=1&language=en&format=json",
+              "protocol": "https",
+              "host": [
+                "geocoding-api",
+                "open-meteo",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "Rīga"
+                },
+                {
+                  "key": "count",
+                  "value": "1"
+                },
+                {
+                  "key": "language",
+                  "value": "en"
+                },
+                {
+                  "key": "format",
+                  "value": "json"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 · Rīga",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Oct 2026 11:15:00 GMT"
+                }
+              ],
+              "cookie": [],
+              "body": "{\"results\":[{\"id\":456172,\"name\":\"Riga\",\"latitude\":56.946,\"longitude\":24.10589,\"elevation\":6.0,\"feature_code\":\"PPLC\",\"country_code\":\"LV\",\"admin1_id\":456173,\"admin2_id\":11352868,\"timezone\":\"Europe/Riga\",\"population\":742572,\"country_id\":458258,\"country\":\"Latvia\",\"admin1\":\"Riga\",\"admin2\":\"Rīga\"}],\"generationtime_ms\":0.5443096}"
+            }
+          ]
+        },
+        {
+          "name": "Geocode: Berlin (name, count=3, language=de) — citi parametri",
+          "description": "Otrā pārbaude — mainīti `count`, `language`: API atgriež 3 rezultātus vācu valodā.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Content-Type: application/json\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test(\"count=3 → līdz 3 rezultātiem\", function () {",
+                  "    pm.expect(body.results.length).to.be.at.most(3);",
+                  "});",
+                  "pm.test(\"language=de → valoda vāciski\", function () {",
+                  "    pm.expect(body.results[0].country).to.eql(\"Deutschland\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://geocoding-api.open-meteo.com/v1/search?name=Berlin&count=3&language=de&format=json",
+              "protocol": "https",
+              "host": [
+                "geocoding-api",
+                "open-meteo",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "Berlin"
+                },
+                {
+                  "key": "count",
+                  "value": "3"
+                },
+                {
+                  "key": "language",
+                  "value": "de"
+                },
+                {
+                  "key": "format",
+                  "value": "json"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 · Berlin",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Oct 2026 11:15:00 GMT"
+                }
+              ],
+              "cookie": [],
+              "body": "{\"results\":[{\"id\":2950159,\"name\":\"Berlin\",\"latitude\":52.52437,\"longitude\":13.41053,\"elevation\":74.0,\"feature_code\":\"PPLC\",\"country_code\":\"DE\",\"admin1_id\":2950157,\"admin3_id\":6547383,\"admin4_id\":6547539,\"timezone\":\"Europe/Berlin\",\"population\":3426354,\"postcodes\":[\"10967\",\"13347\"],\"country_id\":2921044,\"country\":\"Deutschland\",\"admin1\":\"Land Berlin\",\"admin3\":\"Berlin, Stadt\",\"admin4\":\"Berlin\"},{\"id\":5083330,\"name\":\"Berlin\",\"latitude\":44.46867,\"longitude\":-71.18508,\"elevation\":311.0,\"feature_code\":\"PPL\",\"country_code\":\"US\",\"admin1_id\":5090174,\"admin2_id\":5084973,\"admin3_id\":5083340,\"timezone\":\"America/New_York\",\"population\":9367,\"postcodes\":[\"03570\"],\"country_id\":6252001,\"country\":\"Vereinigte Staaten\",\"admin1\":\"New Hampshire\",\"admin2\":\"Coös County\",\"admin3\":\"City of Berlin\"},{\"id\":4500771,\"name\":\"Berlin\",\"latitude\":39.79123,\"longitude\":-74.92905,\"elevation\":50.0,\"feature_code\":\"PPL\",\"country_code\":\"US\",\"admin1_id\":5101760,\"admin2_id\":4501019,\"admin3_id\":4500776,\"timezone\":\"America/New_York\",\"population\":7590,\"postcodes\":[\"08009\"],\"country_id\":6252001,\"country\":\"Vereinigte Staaten\",\"admin1\":\"New Jersey\",\"admin2\":\"Camden County\",\"admin3\":\"Borough of Berlin\"}],\"generationtime_ms\":0.6996393}"
+            }
+          ]
+        },
+        {
+          "name": "Geocode: nepastāvoša pilsēta — tukšs rezultāts",
+          "description": "Robežgadījums: API atbild ar 200, bet bez `results` lauka.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Content-Type: application/json\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test(\"nav results → frontend rāda kļūdu\", function () {",
+                  "    pm.expect(body.results).to.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://geocoding-api.open-meteo.com/v1/search?name=xyzabc123&count=1&language=en&format=json",
+              "protocol": "https",
+              "host": [
+                "geocoding-api",
+                "open-meteo",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "xyzabc123"
+                },
+                {
+                  "key": "count",
+                  "value": "1"
+                },
+                {
+                  "key": "language",
+                  "value": "en"
+                },
+                {
+                  "key": "format",
+                  "value": "json"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 · tukšs rezultāts",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Oct 2026 11:15:00 GMT"
+                }
+              ],
+              "cookie": [],
+              "body": "{\"generationtime_ms\":0.21135807}"
+            }
+          ]
+        },
+        {
+          "name": "Forecast: pašreizējie laikapstākļi (latitude, longitude, current, timezone)",
+          "description": "Galvenā prognoze — tikai `current` bloks, `timezone=auto`.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Content-Type: application/json\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test(\"current.temperature_2m ir skaitlis\", function () {",
+                  "    pm.expect(body.current.temperature_2m).to.be.a(\"number\");",
+                  "});",
+                  "pm.test(\"mērvienības nāk līdzi\", function () {",
+                  "    pm.expect(body.current_units.temperature_2m).to.eql(\"°C\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://api.open-meteo.com/v1/forecast?latitude=56.9496&longitude=24.1052&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&timezone=auto",
+              "protocol": "https",
+              "host": [
+                "api",
+                "open-meteo",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "forecast"
+              ],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "56.9496"
+                },
+                {
+                  "key": "longitude",
+                  "value": "24.1052"
+                },
+                {
+                  "key": "current",
+                  "value": "temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code"
+                },
+                {
+                  "key": "timezone",
+                  "value": "auto"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 · current",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Oct 2026 11:15:00 GMT"
+                }
+              ],
+              "cookie": [],
+              "body": "{\"latitude\":56.95295,\"longitude\":24.111404,\"generationtime_ms\":0.08893013000488281,\"utc_offset_seconds\":10800,\"timezone\":\"Europe/Riga\",\"timezone_abbreviation\":\"GMT+3\",\"elevation\":17.0,\"current_units\":{\"time\":\"iso8601\",\"interval\":\"seconds\",\"temperature_2m\":\"°C\",\"relative_humidity_2m\":\"%\",\"wind_speed_10m\":\"km/h\",\"weather_code\":\"wmo code\"},\"current\":{\"time\":\"2026-10-07T14:15\",\"interval\":900,\"temperature_2m\":15.4,\"relative_humidity_2m\":56,\"wind_speed_10m\":10.4,\"weather_code\":0}}"
+            }
+          ]
+        },
+        {
+          "name": "Forecast: 7 dienas CSV (daily, forecast_days, format=csv) — citi parametri",
+          "description": "Mainīti parametri: `daily` nekā `current`, `forecast_days=7`, `format=csv` — tas pats resurss, cits atbildes formāts.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Content-Type: text/csv\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/csv\");",
+                  "});",
+                  "pm.test(\"ir tabulas galvene ar datumu kolonnu\", function () {",
+                  "    pm.expect(pm.response.text()).to.include(\"temperature_2m_max\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "text/csv",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://api.open-meteo.com/v1/forecast?latitude=56.9496&longitude=24.1052&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=Europe%2FRiga&forecast_days=7&format=csv",
+              "protocol": "https",
+              "host": [
+                "api",
+                "open-meteo",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "forecast"
+              ],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "56.9496"
+                },
+                {
+                  "key": "longitude",
+                  "value": "24.1052"
+                },
+                {
+                  "key": "daily",
+                  "value": "temperature_2m_max,temperature_2m_min,weather_code"
+                },
+                {
+                  "key": "timezone",
+                  "value": "Europe/Riga"
+                },
+                {
+                  "key": "forecast_days",
+                  "value": "7"
+                },
+                {
+                  "key": "format",
+                  "value": "csv"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 · CSV",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/csv; charset=utf-8"
+                }
+              ],
+              "cookie": [],
+              "body": "latitude,longitude,elevation,utc_offset_seconds,timezone,timezone_abbreviation\n56.95295,24.111404,17.0,10800,Europe/Riga,GMT+3\n\ntime,temperature_2m_max (°C),temperature_2m_min (°C),weather_code (wmo code)\n2026-10-07,16.1,8.6,3\n2026-10-08,18.0,11.1,3\n2026-10-09,17.2,10.4,3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 · Free REST API — icanhazdadjoke (joki)",
+      "description": "Bezmaksas REST API ar query parametriem `term`, `limit`, `page`. Prasa headeri `Accept: application/json` (citādāk atnāk HTML).",
+      "item": [
+        {
+          "name": "Search: term=food, limit=1",
+          "description": "Meklēšana ar query parametriem `term` un `limit`.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Content-Type: application/json\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test(\"limit=1 → tieši viens joks\", function () {",
+                  "    pm.expect(body.results).to.have.lengthOf(1);",
+                  "    pm.expect(body.results[0].joke).to.be.a(\"string\");",
+                  "});",
+                  "pm.test(\"pagination info klāt\", function () {",
+                  "    pm.expect(body.total_jokes).to.be.a(\"number\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://icanhazdadjoke.com/search?term=food&limit=1",
+              "protocol": "https",
+              "host": [
+                "icanhazdadjoke",
+                "com"
+              ],
+              "path": [
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "term",
+                  "value": "food"
+                },
+                {
+                  "key": "limit",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 · limit=1",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Oct 2026 11:15:00 GMT"
+                }
+              ],
+              "cookie": [],
+              "body": "{\"current_page\":1,\"limit\":1,\"next_page\":2,\"previous_page\":1,\"results\":[{\"id\":\"s49h3ElVnrc\",\"joke\":\"I burned 2000 calories today, I left my food in the oven for too long.\"}],\"search_term\":\"food\",\"status\":200,\"total_jokes\":5,\"total_pages\":5}"
+            }
+          ]
+        },
+        {
+          "name": "Search: term=food, limit=3, page=2 — citi parametri",
+          "description": "Mainīti `limit` un pievienots `page` — tas pats resurss, cits lapas parametrs.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Content-Type: application/json\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test(\"esam 2. lapā\", function () { pm.expect(body.current_page).to.eql(2); });",
+                  "pm.test(\"limit=3\", function () { pm.expect(body.limit).to.eql(3); });",
+                  "pm.test(\"rezultāti ir masīvs\", function () { pm.expect(body.results).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://icanhazdadjoke.com/search?term=food&limit=3&page=2",
+              "protocol": "https",
+              "host": [
+                "icanhazdadjoke",
+                "com"
+              ],
+              "path": [
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "term",
+                  "value": "food"
+                },
+                {
+                  "key": "limit",
+                  "value": "3"
+                },
+                {
+                  "key": "page",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 · page=2",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Oct 2026 11:15:00 GMT"
+                }
+              ],
+              "cookie": [],
+              "body": "{\"current_page\":2,\"limit\":5,\"next_page\":1,\"previous_page\":1,\"results\":[],\"search_term\":\"food\",\"status\":200,\"total_jokes\":5,\"total_pages\":1}"
+            }
+          ]
+        },
+        {
+          "name": "Random joke (GET / + Accept: application/json)",
+          "description": "Atsevišķs REST resurss — nevis query params, bet ceļš `/`.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Content-Type: application/json\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test(\"ir lauka `joke` teksts\", function () {",
+                  "    pm.expect(body.joke).to.be.a(\"string\").that.is.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://icanhazdadjoke.com/",
+              "protocol": "https",
+              "host": [
+                "icanhazdadjoke",
+                "com"
+              ],
+              "path": [],
+              "query": []
+            }
+          },
+          "response": [
+            {
+              "name": "200 · random",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Oct 2026 11:15:00 GMT"
+                }
+              ],
+              "cookie": [],
+              "body": "{\"id\":\"fiyPR7wPZDd\",\"joke\":\"When does a joke become a dad joke? When it becomes apparent.\",\"status\":200}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3 · Sava REST API — laravel-api (zirodev23)",
+      "description": "Šī projekta Laravel REST API. `POST /login` atgriež Sanctum token, kas automātiski saglabājas mainīgajā `{{token}}` — pārējie pieprasījumi to izmanto.",
+      "item": [
+        {
+          "name": "GET /api/posts — resursu saraksts (bez autentifikācijas)",
+          "description": "REST: `GET` + resurss `/posts`. Atbild ar masīvu (200).",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Content-Type: application/json\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test(\"posts ir masīvs ar objektiem\", function () {",
+                  "    pm.expect(body).to.be.an(\"array\");",
+                  "    pm.expect(body[0]).to.have.property(\"title\");",
+                  "    pm.expect(body[0]).to.have.property(\"body\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/posts",
+              "protocol": "http",
+              "host": [
+                "localhost:8000"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/login — saglabā {{token}}",
+          "description": "Autentifikācija. Veiksmes gadījumā kolekcijas mainīgajā `{{token}}` ieraksta saņemto Bearer token (izpildi šo pieprasījumu pirms pārējiem autorizētajiem).",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Content-Type: application/json\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test(\"saņemts token\", function () {",
+                  "    pm.expect(body.token).to.be.a(\"string\");",
+                  "    pm.expect(body.user).to.have.property(\"email\");",
+                  "});",
+                  "pm.collectionVariables.set(\"token\", body.token);",
+                  "pm.collectionVariables.set(\"user_id\", body.user.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/login",
+              "protocol": "http",
+              "host": [
+                "localhost:8000"
+              ],
+              "path": [
+                "api",
+                "login"
+              ],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"admin@example.com\", \"password\": \"password\"}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/login — nepareiza parole (negatīvais testa gadījums)",
+          "description": "API atbild ar 200 un `errors` objektu — frontend to pārvērš par kļūdas ziņojumu.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"atbild ar errors objektu\", function () {",
+                  "    pm.expect(pm.response.json().errors).to.be.an(\"object\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/login",
+              "protocol": "http",
+              "host": [
+                "localhost:8000"
+              ],
+              "path": [
+                "api",
+                "login"
+              ],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"admin@example.com\", \"password\": \"wrong-password\"}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/user — pašreizējais lietotājs (Bearer)",
+          "description": "Autorizēts pieprasījums ar headeri `Authorization: Bearer {{token}}`.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Content-Type: application/json\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"lietotāja e-pasts sakrīt ar ielogoto\", function () {",
+                  "    pm.expect(pm.response.json().email).to.eql(\"admin@example.com\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/user",
+              "protocol": "http",
+              "host": [
+                "localhost:8000"
+              ],
+              "path": [
+                "api",
+                "user"
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/posts — izveidot ierakstu (Bearer) → saglabā {{postId}}",
+          "description": "REST: `POST` uz resursu kolekciju ar JSON ķermeni `title` + `body`.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201 Created\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"Content-Type: application/json\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test(\"jauns ieraksts ar id un title\", function () {",
+                  "    pm.expect(body.id).to.be.a(\"number\");",
+                  "    pm.expect(body.title).to.eql(\"Postman izveidots ieraksts\");",
+                  "});",
+                  "pm.collectionVariables.set(\"postId\", body.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/posts",
+              "protocol": "http",
+              "host": [
+                "localhost:8000"
+              ],
+              "path": [
+                "api",
+                "posts"
+              ],
+              "query": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"Postman izveidots ieraksts\", \"body\": \"Apsveicu — tas nāk no Postman kolekcijas.\"}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/posts/{{postId}} — dzēst (Bearer)",
+          "description": "REST: `DELETE` uz konkrētu resursu. Izpildi pēc `POST /api/posts`, lai `{{postId}}` būtu aizpildīts.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 OK\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Content-Type: application/json\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "pm.test(\"dzēšanas paziņojums\", function () {",
+                  "    pm.expect(pm.response.json().message).to.include(\"has been deleted\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8000/api/posts/{{postId}}",
+              "protocol": "http",
+              "host": [
+                "localhost:8000"
+              ],
+              "path": [
+                "api",
+                "posts",
+                "{{postId}}"
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

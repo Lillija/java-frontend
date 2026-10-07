@@ -137,6 +137,13 @@ function hideError() {
     byId('error').classList.add('hidden');
 }
 
+// The inline error box lives on the Home page. When an action fails while the user
+// is on another page (e.g. deleting a post from Profile) the message is shown as a toast.
+function reportError(message) {
+    if (byId('page-home').classList.contains('hidden')) toast(message, 'error');
+    else showError(message);
+}
+
 // ---- Toasts -------------------------------------------------
 
 function toast(message, type) {
@@ -546,7 +553,7 @@ async function handleDeletePost(postId) {
 
         toast('Post deleted', 'success');
     } catch (error) {
-        showError('Failed to delete post — ' + friendlyError(error));
+        reportError('Failed to delete post — ' + friendlyError(error));
     }
 }
 

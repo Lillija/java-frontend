@@ -5,8 +5,12 @@
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
-    "api": "php artisan serve --host=0.0.0.0 --port=8000",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "api": "cd laravel-api && php artisan serve --host=0.0.0.0 --port=8000",
+    "react": "npm --prefix react-frontend run dev",
+    "react:build": "npm --prefix react-frontend run build",
+    "postman": "npx --yes newman run postman/Free-API-Lab.postman_collection.json --color off",
+    "test": "npm run test:build && node tests/vanilla-smoke.mjs && node tests/react-smoke.mjs",
+    "test:build": "cd react-frontend && npx vite build --config tests/vite.smoke.config.js --logLevel warn"
   },
   "keywords": [],
   "author": "",
@@ -14,5 +18,8 @@
   "type": "commonjs",
   "dependencies": {
     "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "jsdom": "^29.1.1"
   }
 }

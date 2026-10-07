@@ -1,0 +1,3 @@
+[submodule "laravel-api"]
+	path = laravel-api
+	url = https://github.com/zirodev23/laravel-api

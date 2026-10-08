@@ -35,6 +35,7 @@ export function clearSession() {
 
 let listeners = []
 let entries = []
+let entrySeq = 0
 
 export function subscribeToLog(listener) {
   listeners.push(listener)
@@ -45,8 +46,29 @@ export function subscribeToLog(listener) {
 }
 
 function pushEntry(entry) {
-  entries = [entry, ...entries].slice(0, 40)
+  // `id` is stable, so the log rows keep their React key when new calls arrive.
+  entries = [{ ...entry, id: ++entrySeq }, ...entries].slice(0, 40)
   listeners.forEach((listener) => listener(entries))
+}
+
+/* ------------------------------------------------------------ session sync */
+
+let authListeners = []
+
+/**
+ * Lets React hear about a session that the client had to drop (HTTP 401),
+ * otherwise the stored user would stay visible in the UI after the token died.
+ */
+export function subscribeToAuth(listener) {
+  authListeners.push(listener)
+  return () => {
+    authListeners = authListeners.filter((item) => item !== listener)
+  }
+}
+
+function sessionExpired() {
+  clearSession()
+  authListeners.forEach((listener) => listener())
 }
 
 /* --------------------------------------------------------------- requests */
@@ -126,7 +148,12 @@ export async function api(path, { method = 'GET', body, signal } = {}) {
   })
 
   if (!response.ok) {
-    if (response.status === 401) clearSession()
+    // 401 with a token we sent = the session is dead. Clear it here and let
+    // subscribers (App) drop their user state, so the UI never lies.
+    if (response.status === 401) {
+      if (token) sessionExpired()
+      else clearSession()
+    }
     throw new ApiError(
       messageFromPayload(response.status, payload),
       response.status,

@@ -20,6 +20,8 @@ export default function PostCard({ post, user, onDelete }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [draft, setDraft] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [sending, setSending] = useState(false)
 
   const canDelete = user && user.id === post.user_id
 
@@ -41,25 +43,33 @@ export default function PostCard({ post, user, onDelete }) {
   }
 
   async function handleDeleteClick() {
+    if (deleting) return // ignore a second click while the DELETE is in flight
+    setDeleting(true)
     setError(null)
     try {
       await onDelete(post.id)
     } catch (err) {
       // The request failed — show the reason instead of failing silently.
       setError(err.message)
+    } finally {
+      setDeleting(false)
     }
   }
 
   async function handleComment(event) {
     event.preventDefault()
-    if (!draft.trim()) return
+    const content = draft.trim()
+    if (!content || sending) return
     setError(null)
+    setSending(true)
     try {
-      const created = await createComment(post.id, draft.trim())
+      const created = await createComment(post.id, content)
       setComments((current) => [...current, created])
       setDraft('')
     } catch (err) {
       setError(err.message)
+    } finally {
+      setSending(false)
     }
   }
 
@@ -68,8 +78,8 @@ export default function PostCard({ post, user, onDelete }) {
       <header className="post-head">
         <h3>{post.title}</h3>
         {canDelete && (
-          <button className="btn btn-ghost" onClick={handleDeleteClick}>
-            Delete
+          <button className="btn btn-ghost" onClick={handleDeleteClick} disabled={deleting}>
+            {deleting ? 'Deleting…' : 'Delete'}
           </button>
         )}
       </header>
@@ -106,7 +116,9 @@ export default function PostCard({ post, user, onDelete }) {
                 onChange={(event) => setDraft(event.target.value)}
                 placeholder="Write a comment…"
               />
-              <button className="btn" type="submit">Send</button>
+              <button className="btn" type="submit" disabled={sending}>
+                {sending ? 'Sending…' : 'Send'}
+              </button>
             </form>
           ) : (
             <p className="muted">Login to add a comment.</p>

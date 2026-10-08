@@ -9,6 +9,7 @@ import {
   login as apiLogin,
   logout as apiLogout,
   saveSession,
+  subscribeToAuth,
 } from './api'
 import LoginForm from './components/LoginForm'
 import NetworkLog from './components/NetworkLog'
@@ -44,6 +45,15 @@ export default function App() {
     firstLoad.current = false
     loadPosts()
   }, [loadPosts])
+
+  useEffect(() => {
+    // The API client drops an expired/invalid token on 401 — mirror that here
+    // so the header, the login form and the stored session stay in sync.
+    return subscribeToAuth(() => {
+      setUser(null)
+      setNotice('Session expired — please log in again.')
+    })
+  }, [])
 
   async function handleLogin(email, password) {
     setAuthBusy(true)

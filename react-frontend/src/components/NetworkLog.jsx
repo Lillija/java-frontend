@@ -22,8 +22,8 @@ export default function NetworkLog() {
           </header>
           <ul className="netlog-list">
             {entries.length === 0 && <li className="muted">No requests yet</li>}
-            {entries.map((entry, index) => (
-              <li key={`${entry.at}-${index}`} className="netlog-row">
+            {entries.map((entry) => (
+              <li key={entry.id} className="netlog-row">
                 <span className={`method m-${entry.method}`}>{entry.method}</span>
                 <span className="url">{entry.url.replace(/^https?:\/\//, '')}</span>
                 <span className={`status ${entry.status === 'ERR' ? 'bad' : ''}`}>

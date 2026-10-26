@@ -60,6 +60,8 @@ export default function PostCard({ post, user, onDelete }: PostCardProps) {
 
   async function handleDeleteClick(): Promise<void> {
     if (deleting) return // ignore a second click while the DELETE is in flight
+    // Guard the destructive action — a misclick should not remove a post.
+    if (!window.confirm(`Delete post "${post.title}"?`)) return
     setDeleting(true)
     setError(null)
     try {

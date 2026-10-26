@@ -68,6 +68,7 @@ describe('<App />', () => {
   })
 
   it('removes a post from the list after a successful DELETE', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true) // feature/confirm-delete asks first
     const calls = stubFetch()
     render(<App />)
     await screen.findByText('Pirmais ieraksts')
@@ -81,6 +82,7 @@ describe('<App />', () => {
     await waitFor(() => expect(document.querySelectorAll('.post-card')).toHaveLength(1))
     expect(calls).toContain('DELETE http://localhost:8000/api/posts/1')
     expect(screen.queryByText('Pirmais ieraksts')).not.toBeInTheDocument()
+    vi.restoreAllMocks()
     vi.unstubAllGlobals()
   })
 })

@@ -33,6 +33,7 @@ describe('<PostCard />', () => {
   })
 
   it('calls onDelete with the post id and shows API errors', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true) // the feature branch asks first
     const onDelete = vi.fn(async () => {
       throw new Error('This post is not yours')
     })
@@ -44,6 +45,7 @@ describe('<PostCard />', () => {
     expect(onDelete).toHaveBeenCalledWith(5)
     // the button is re-enabled after the failed request
     await waitFor(() => expect(screen.getByText('Delete')).toBeEnabled())
+    vi.restoreAllMocks()
   })
 
   it('loads comments on demand and appends a new one locally', async () => {

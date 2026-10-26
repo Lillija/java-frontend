@@ -71,4 +71,32 @@ describe('<PostCard />', () => {
     expect(await screen.findByText('Paldies!')).toBeInTheDocument()
     vi.unstubAllGlobals()
   })
+
+  it('deletes a single comment and calls DELETE /posts/{id}/comments/{cid}', async () => {
+    const calls: string[] = []
+    vi.stubGlobal('fetch', async (url: string, options: RequestInit = {}) => {
+      const method = options.method || 'GET'
+      calls.push(`${method} ${url}`)
+      if (method === 'GET' && /\/comments$/.test(url)) {
+        return json([
+          { id: 10, user_id: 1, content: 'Jauki!' },
+          { id: 11, user_id: 2, content: 'Svešs komentārs' },
+        ])
+      }
+      if (method === 'DELETE' && /\/comments\/\d+$/.test(url)) return json(null, 204)
+      return json({ message: 'not found' }, 404)
+    })
+    render(<PostCard post={POST} user={AUTHOR} onDelete={vi.fn()} />)
+
+    fireEvent.click(screen.getByText(/Comments \(0\)/))
+    await screen.findByText('Jauki!')
+
+    // own comment (user_id 1) shows a delete button, the other one does not
+    fireEvent.click(screen.getByLabelText('Delete comment 10'))
+
+    await waitFor(() => expect(screen.queryByText('Jauki!')).not.toBeInTheDocument())
+    expect(screen.getByText('Svešs komentārs')).toBeInTheDocument()
+    expect(calls).toContain('DELETE http://localhost:8000/api/posts/5/comments/10')
+    vi.unstubAllGlobals()
+  })
 })

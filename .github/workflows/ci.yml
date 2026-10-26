@@ -1,0 +1,86 @@
+# CI pipeline for the React + TypeScript frontend (react-frontend/).
+#
+# Trigger: every push to the `main` branch (and pull requests targeting it),
+# so nothing lands on main without passing lint, types, build and tests.
+#
+# The automated test suite (react-frontend/tests/unit/) was generated with
+# AI assistance and is executed in the `test` job below together with the
+# jsdom smoke tests from the vanilla and React frontends.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # 1) static analysis: oxlint + TypeScript compiler (tsc --noEmit)
+  lint:
+    name: Lint & typecheck
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: react-frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: react-frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: oxlint
+        run: npm run lint
+      - name: TypeScript check (no emit)
+        run: npm run typecheck
+
+  # 2) production build: must compile with strict TS settings
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: react-frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: react-frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: vite build (tsc + bundler)
+        run: npm run build
+
+  # 3) tests: AI-generated Vitest suite + jsdom smoke tests of both frontends
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: react-frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            react-frontend/package-lock.json
+            package-lock.json
+      - name: Install frontend dependencies
+        run: npm ci
+      - name: Unit tests (Vitest + Testing Library, jsdom)
+        run: npm test
+      - name: React smoke test (production bundle in jsdom)
+        run: npm run test:smoke
+      - name: Install root dependencies (jsdom for vanilla smoke test)
+        working-directory: .
+        run: npm ci
+      - name: Vanilla JS smoke test (regression baseline)
+        working-directory: .
+        run: node tests/vanilla-smoke.mjs

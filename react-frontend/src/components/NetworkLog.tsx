@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { subscribeToLog } from '../api'
+import { subscribeToLog, type LogEntry } from '../api'
 
 /** Live list of AJAX calls — proof that data is fetched without page reload. */
 export default function NetworkLog() {
   const [open, setOpen] = useState(false)
-  const [entries, setEntries] = useState([])
+  const [entries, setEntries] = useState<LogEntry[]>([])
 
   useEffect(() => subscribeToLog(setEntries), [])
 

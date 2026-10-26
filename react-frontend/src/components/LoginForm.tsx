@@ -1,17 +1,23 @@
 import { useState } from 'react'
+import { errorMessage } from '../api'
 
-export default function LoginForm({ onLogin, busy }) {
+interface LoginFormProps {
+  onLogin: (email: string, password: string) => Promise<unknown>
+  busy: boolean
+}
+
+export default function LoginForm({ onLogin, busy }: LoginFormProps) {
   const [email, setEmail] = useState('admin@example.com')
   const [password, setPassword] = useState('password')
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
-  async function handleSubmit(event) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
     setError(null)
     try {
       await onLogin(email, password)
     } catch (err) {
-      setError(err.message)
+      setError(errorMessage(err))
     }
   }
 

@@ -3,6 +3,7 @@ import {
   clearSession,
   createPost,
   deletePost,
+  errorMessage,
   fetchPosts,
   getStoredUser,
   getToken,
@@ -10,6 +11,9 @@ import {
   logout as apiLogout,
   saveSession,
   subscribeToAuth,
+  type LoginResponse,
+  type Post,
+  type User,
 } from './api'
 import LoginForm from './components/LoginForm'
 import NetworkLog from './components/NetworkLog'
@@ -18,12 +22,13 @@ import PostCard from './components/PostCard'
 import Spinner from './components/Spinner'
 
 export default function App() {
-  const [user, setUser] = useState(getStoredUser)
-  const [posts, setPosts] = useState([])
+  // TS infers the state type from the initial value: User | null, Post[], string | null …
+  const [user, setUser] = useState<User | null>(getStoredUser)
+  const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [authBusy, setAuthBusy] = useState(false)
-  const [error, setError] = useState(null)
-  const [notice, setNotice] = useState(null)
+  const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
   const firstLoad = useRef(true)
 
   const loadPosts = useCallback(async () => {
@@ -32,7 +37,7 @@ export default function App() {
     try {
       setPosts(await fetchPosts())
     } catch (err) {
-      setError(err.message)
+      setError(errorMessage(err)) // err is `unknown` in strict TS — narrow it first
       setPosts([])
     } finally {
       setLoading(false)
@@ -55,14 +60,14 @@ export default function App() {
     })
   }, [])
 
-  async function handleLogin(email, password) {
+  async function handleLogin(email: string, password: string): Promise<LoginResponse> {
     setAuthBusy(true)
     try {
       const data = await apiLogin(email, password)
-      if (data && data.errors) {
+      if (data.errors) {
         throw new Error(Object.values(data.errors)[0][0])
       }
-      if (!data || !data.token) throw new Error('The API did not return a token.')
+      if (!data.token) throw new Error('The API did not return a token.')
       saveSession(data.token, data.user)
       setUser(data.user)
       setNotice(`Welcome back, ${data.user.name}!`)
@@ -73,7 +78,7 @@ export default function App() {
     }
   }
 
-  async function handleLogout() {
+  async function handleLogout(): Promise<void> {
     if (getToken()) {
       try {
         await apiLogout()
@@ -86,13 +91,13 @@ export default function App() {
     setNotice('Logged out')
   }
 
-  async function handleCreate(data) {
+  async function handleCreate(data: { title: string; body: string }): Promise<void> {
     const created = await createPost(data)
     setPosts((current) => [created, ...current])
     setNotice('Post published')
   }
 
-  async function handleDelete(id) {
+  async function handleDelete(id: number): Promise<void> {
     await deletePost(id)
     setPosts((current) => current.filter((post) => post.id !== id))
     setNotice(`Post #${id} deleted`)

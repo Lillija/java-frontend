@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    /* Syntax + emit */
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true, // import './App.tsx' — Vite resolves it, tsc only checks
+    "verbatimModuleSyntax": true,       // forces `import type` for type-only imports
+    "erasableSyntaxOnly": true,         // no enums / namespaces — types must be erasable at build time
+    "noEmit": true,                     // type checking only: Vite/esbuild does the transpiling
+
+    /* Strictness — the reason we migrate */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+
+    /* Environment */
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node", "vite/client"],
+    "jsx": "react-jsx",                // no `import React` needed in every file
+    "skipLibCheck": true
+  },
+  "include": ["src", "tests", "*.config.ts"]
+}

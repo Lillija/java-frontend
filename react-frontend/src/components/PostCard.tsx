@@ -1,8 +1,15 @@
 import { useState } from 'react'
 import Spinner from './Spinner'
-import { createComment, fetchComments } from '../api'
+import { createComment, errorMessage, fetchComments, type Comment, type Post, type User } from '../api'
 
-function formatDate(value) {
+// Explicit prop types: in JS a forgotten prop or a typo (userd.id) is a runtime crash.
+interface PostCardProps {
+  post: Post
+  user: User | null
+  onDelete: (id: number) => Promise<void>
+}
+
+function formatDate(value: string): string {
   try {
     return new Date(value).toLocaleDateString(undefined, {
       year: 'numeric',
@@ -14,18 +21,18 @@ function formatDate(value) {
   }
 }
 
-export default function PostCard({ post, user, onDelete }) {
+export default function PostCard({ post, user, onDelete }: PostCardProps) {
   const [open, setOpen] = useState(false)
-  const [comments, setComments] = useState([])
+  const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [sending, setSending] = useState(false)
 
-  const canDelete = user && user.id === post.user_id
+  const canDelete = user !== null && user.id === post.user_id
 
-  async function toggleComments() {
+  async function toggleComments(): Promise<void> {
     setError(null)
     if (!open) {
       setLoading(true)
@@ -33,7 +40,7 @@ export default function PostCard({ post, user, onDelete }) {
         setComments(await fetchComments(post.id))
         setOpen(true)
       } catch (err) {
-        setError(err.message)
+        setError(errorMessage(err))
       } finally {
         setLoading(false)
       }
@@ -42,7 +49,7 @@ export default function PostCard({ post, user, onDelete }) {
     setOpen(false)
   }
 
-  async function handleDeleteClick() {
+  async function handleDeleteClick(): Promise<void> {
     if (deleting) return // ignore a second click while the DELETE is in flight
     setDeleting(true)
     setError(null)
@@ -50,13 +57,13 @@ export default function PostCard({ post, user, onDelete }) {
       await onDelete(post.id)
     } catch (err) {
       // The request failed — show the reason instead of failing silently.
-      setError(err.message)
+      setError(errorMessage(err))
     } finally {
       setDeleting(false)
     }
   }
 
-  async function handleComment(event) {
+  async function handleComment(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
     const content = draft.trim()
     if (!content || sending) return
@@ -67,7 +74,7 @@ export default function PostCard({ post, user, onDelete }) {
       setComments((current) => [...current, created])
       setDraft('')
     } catch (err) {
-      setError(err.message)
+      setError(errorMessage(err))
     } finally {
       setSending(false)
     }

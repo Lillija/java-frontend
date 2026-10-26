@@ -9,7 +9,7 @@ export default defineConfig({
     outDir: resolve(import.meta.dirname, 'build'),
     emptyOutDir: true,
     lib: {
-      entry: resolve(import.meta.dirname, 'smoke-entry.jsx'),
+      entry: resolve(import.meta.dirname, 'smoke-entry.tsx'),
       formats: ['es'],
       fileName: 'smoke',
     },

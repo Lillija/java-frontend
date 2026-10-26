@@ -1,12 +1,17 @@
 import { useState } from 'react'
+import { errorMessage } from '../api'
 
-export default function NewPostForm({ onCreate }) {
+interface NewPostFormProps {
+  onCreate: (data: { title: string; body: string }) => Promise<unknown>
+}
+
+export default function NewPostForm({ onCreate }: NewPostFormProps) {
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  async function handleSubmit(event) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
     setError(null)
     setBusy(true)
@@ -15,7 +20,7 @@ export default function NewPostForm({ onCreate }) {
       setTitle('')
       setBody('')
     } catch (err) {
-      setError(err.message)
+      setError(errorMessage(err))
     } finally {
       setBusy(false)
     }

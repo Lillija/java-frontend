@@ -101,4 +101,16 @@ describe('<PostCard />', () => {
     expect(calls).toContain('DELETE http://localhost:8000/api/posts/5/comments/10')
     vi.unstubAllGlobals()
   })
+
+  it('asks for confirmation and skips the DELETE when the user cancels', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const onDelete = vi.fn()
+    render(<PostCard post={POST} user={AUTHOR} onDelete={onDelete} />)
+
+    fireEvent.click(screen.getByText('Delete'))
+
+    expect(confirmSpy).toHaveBeenCalledWith('Delete post "Testa ieraksts"?')
+    expect(onDelete).not.toHaveBeenCalled()
+    confirmSpy.mockRestore()
+  })
 })

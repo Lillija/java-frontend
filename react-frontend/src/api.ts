@@ -242,6 +242,9 @@ export const fetchComments = (postId: number) =>
 export const createComment = (postId: number, content: string) =>
   api<Comment>(`/posts/${postId}/comments`, { method: 'POST', body: { content } })
 
+export const deleteComment = (postId: number, commentId: number) =>
+  api<null>(`/posts/${postId}/comments/${commentId}`, { method: 'DELETE' })
+
 export const login = (email: string, password: string) =>
   api<LoginResponse>('/login', { method: 'POST', body: { email, password } })
 

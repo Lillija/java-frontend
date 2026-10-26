@@ -1,6 +1,14 @@
 import { useState } from 'react'
 import Spinner from './Spinner'
-import { createComment, errorMessage, fetchComments, type Comment, type Post, type User } from '../api'
+import {
+  createComment,
+  deleteComment,
+  errorMessage,
+  fetchComments,
+  type Comment,
+  type Post,
+  type User,
+} from '../api'
 
 // Explicit prop types: in JS a forgotten prop or a typo (userd.id) is a runtime crash.
 interface PostCardProps {
@@ -29,6 +37,7 @@ export default function PostCard({ post, user, onDelete }: PostCardProps) {
   const [draft, setDraft] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [sending, setSending] = useState(false)
+  const [deletingCommentId, setDeletingCommentId] = useState<number | null>(null)
 
   const canDelete = user !== null && user.id === post.user_id
 
@@ -60,6 +69,21 @@ export default function PostCard({ post, user, onDelete }: PostCardProps) {
       setError(errorMessage(err))
     } finally {
       setDeleting(false)
+    }
+  }
+
+  /** Deletes a single comment from the list (requirement: remove any list item). */
+  async function handleDeleteComment(comment: Comment): Promise<void> {
+    if (deletingCommentId !== null) return // one DELETE at a time
+    setDeletingCommentId(comment.id)
+    setError(null)
+    try {
+      await deleteComment(post.id, comment.id)
+      setComments((current) => current.filter((item) => item.id !== comment.id))
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setDeletingCommentId(null)
     }
   }
 
@@ -112,6 +136,16 @@ export default function PostCard({ post, user, onDelete }: PostCardProps) {
             {comments.map((comment) => (
               <li key={comment.id}>
                 <strong>#{comment.user_id}</strong> {comment.content}
+                {user !== null && user.id === comment.user_id && (
+                  <button
+                    className="btn btn-ghost"
+                    onClick={() => handleDeleteComment(comment)}
+                    disabled={deletingCommentId === comment.id}
+                    aria-label={`Delete comment ${comment.id}`}
+                  >
+                    {deletingCommentId === comment.id ? 'Deleting…' : '✕'}
+                  </button>
+                )}
               </li>
             ))}
           </ul>
